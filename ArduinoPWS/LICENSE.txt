@@ -1,46 +1,16 @@
 #########################################################
-#        _____        __          _    _                #
-#       /  ___|      / _|        | |  (_)               #
-#       \ `--.  ___ | |_ __ _ ___| | ___ _ __           #
-#        `--. \/ _ \|  _/ _` / __| |/ / | '_ \          #
-#       /\__/ / (_) | || (_| \__ \   <| | | | |         #
-#       \____/ \___/|_| \__,_|___/_|\_\_|_| |_|         #
 #                                                       #
-#-------------------------------------------------------#
+# ArduinoPWS is a free weewx skin                       #
 #                                                       #
-# Sofaskin is a free weewx skin.                        #
-# The main goal was to build a beautiful and modern     #
-# layout inspired by Google's material design.          #
-# It is fully responsive and looks great on all         #
-# kind of devices.                                      #
+# ArduinoPWS is licensed under the MIT License.         #
 #                                                       #
-# Successfully tested on weewx 3.0 / 3.0.1.             #
-# Almanac Python extension recommended.                 #
-# Feel free to change the layout however you want.      #
-# Under css/scss you'll find all the Sass-files to      #
-# change colors etc. Or change them in the main.css.    #
-#                                                       #
-# Sofaskin is licensed under the MIT License.           #
-#                                                       #
-# Made by Sven Reifschneider <hello@blauesledersofa.de> #
+# Made by Radek Kaczorek <rkaczorek@gmail.com>          #
+# Original design of Sofaskin by Sven Reifschneider     #
 # blaues Ledersofa Photography and Web Development      #
-#                                                       #
-#-------------------------------------------------------#
-#                                                       #
-# Version 1.1                                           #
-# Dec 2014 - Feb 2015                                   #
-# bls-sofaskin-v1.1                                     #
-#                                                       #
-#-------------------------------------------------------#
-#                                                       #
-# Made with love, coffee and pizza                      #
-# Designed in Frankfurt, Germany                        #
-#                                                       #
-#-------------------------------------------------------#
 #                                                       #
 # The MIT License (MIT)                                 #
 #                                                       #
-# Copyright (c) 2014 Sven Reifschneider                 #
+# Copyright (c) 2016 Radek Kaczorek                     #
 #                                                       #
 # Permission is hereby granted, free of charge, to any  #
 # person obtaining a copy of this software and          #
