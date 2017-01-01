@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html class="no-js">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="profile" href="http://gmpg.org/xfn/11" />
+        
+        <title>$station.location Monthly Weather Summary</title>
+        
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="$station.location Monthly Weather Summary" />
+        <meta property="og:description" content="Monthly Weather Summary from $station.location - weather web site powered by weewx" />
+		<meta property="og:type" content="website" /> 
+
+        <!-- Icons -->
+        <link rel="icon" href="favicon.ico" type="image/png">
+		<link rel="apple-touch-icon" href="touch-icon.png"/>
+        
+        <!-- Styles -->
+        <link href='http://fonts.googleapis.com/css?family=Lato:300,400,700' rel='stylesheet' type='text/css'>
+		<link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="css/main.css">
+        
+        <!-- Skripte -->
+        <script src="js/modernizr-2.6.2.min.js"></script>
+        
+        <script type="text/javascript">
+            function openNoaaFile(date)
+            {
+                var url = "NOAA/NOAA-";
+                url = url + date;
+                url = url + ".txt";
+                if(date !== "Monthly summary" && date !== "Yearly summary") {
+                    window.location=url;
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <header>
+            <div class="container-fix" >
+                <div class="h-left" >
+                <h1><i class="fa fa-cloud" ></i> $station.location</h1>
+                #set $lat = float($station.latitude[0]) + float($station.latitude[1]) / 60
+                #set $lon = float($station.longitude[0]) + float($station.longitude[1]) / 60
+                <p>$station.latitude[0]&deg; $station.latitude[1]' $station.latitude[2] | $station.longitude[0]&deg; $station.longitude[1]' $station.longitude[2] | $station.altitude | <a href="https://www.google.pl/maps/place/$lat+$lon/@$lat,$lon,12z" target="_blank" ><i class="fa fa-map-marker" ></i> Show on map</a></p>
+                <h2>Monthly Weather Summary</h2>
+                <p><i class="fa fa-clock-o" ></i> <b>$current.dateTime</b></p>
+                </div>
+                
+                <div class="h-right" >
+                    <table>
+                        <tr><td><b>Hardware:</b></td><td>$station.hardware</td></tr>
+                        <tr><td><b>Software:</b></td><td><a href="http://weewx.com/" target="_blank" >weewx v$station.version</a></td></tr>
+                        <tr><td><b>Weewx uptime:</b></td><td>$station.uptime</td></tr>
+                        <tr><td><b>Server uptime:</b></td><td>$station.os_uptime</td></tr>
+                    </table>
+                </div>
+
+                <nav>
+                    <ul>
+                        <li><a href="index.html" >Current</a></li>
+                        <li><a href="week.html" >Week</a></li>
+                        <li class="active" ><a href="month.html" >Month</a></li>
+                        <li><a href="year.html" >Year</a></li>
+                        <li><a href="RSS/weewx_rss.xml" >RSS</a></li>
+                        <li><select name="noaaselect" onchange="openNoaaFile(value)">
+                                <option>Monthly summary</option>
+                                #for $monthYear in $SummaryByMonth
+                                    <option value="$monthYear">$monthYear</option>
+                                #end for
+                            </select></li>
+                        <li><select name="noaaselect" onchange="openNoaaFile(value)">
+                                <option>Yearly summary</option>
+                                #for $yr in $SummaryByYear
+                                    <option value="$yr">$yr</option>
+                                #end for
+                            </select></li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+        
+        <div class="main" >
+        <div class="container" >
+            
+            <div class="left" >
+                
+                <div class="card" >
+                    <h1><i class="fa fa-calendar-o m-orange" ></i> This Month</h1>
+                    <table class="tablespacer">
+                        <tr><td>High Temperature</td><td>$month.outTemp.max</td><td>$month.outTemp.maxtime</td></tr>
+                        <tr><td>Low Temperature</td><td>$month.outTemp.min</td><td>$month.outTemp.mintime</td></tr>
+                        <tr><td>High Heat Index</td><td>$month.heatindex.max</td><td>$month.heatindex.maxtime</td></tr>
+                        <tr><td>Low Wind Chill</td><td>$month.windchill.min</td><td>$month.windchill.mintime</td></tr>
+                        <tr><td>High Dewpoint</td><td>$month.dewpoint.max</td><td>$month.dewpoint.maxtime</td></tr>
+                        <tr><td>Low Dewpoint</td><td>$month.dewpoint.min</td><td>$month.dewpoint.mintime</td></tr>
+                        <tr><td>High Humidity</td><td>$month.outHumidity.max</td><td>$month.outHumidity.maxtime</td></tr>
+                        <tr><td>Low Humidity</td><td>$month.outHumidity.min</td><td>$month.outHumidity.mintime</td></tr>
+                        <tr><td>High Barometer</td><td>$month.barometer.max</td><td>$month.barometer.maxtime</td></tr>
+                        <tr><td>Low Barometer</td><td>$month.barometer.min</td><td>$month.barometer.mintime</td></tr>
+                        <tr><td>Rain Total</td><td>$month.rain.sum</td><td></td></tr>
+                        <tr><td>High Rain Rate</td><td>$month.rainRate.max</td><td>$month.rainRate.maxtime</td></tr>
+                        <tr><td>High Wind Speed</td><td>$month.wind.max $month.wind.gustdir</td><td>$month.wind.maxtime</td></tr>
+                        <tr><td>Average Wind</td><td>$month.wind.avg</td><td></td></tr>
+                        <tr><td>RMS Wind</td><td>$month.wind.rms</td><td></td></tr>
+                        <tr><td>Vector Average Speed</td><td>$month.wind.vecavg</td><td></td></tr>
+                        <tr><td>Vector Average Direction</td><td>$month.wind.vecdir</td><td></td></tr>
+                        #if $day.inTemp.has_data
+                        <tr><td>High Inside Temperature</td><td>$month.inTemp.max</td><td>$month.inTemp.maxtime</td></tr>
+                        <tr><td>Low Inside Temperature</td><td>$month.inTemp.min</td><td>$month.inTemp.mintime</td></tr>
+                        #end if
+                        #if $month.extraTemp1.has_data
+                        <tr><td>High Pond Temp</td><td>$month.extraTemp1.max</td><td>$month.extraTemp1.maxtime</td></tr>
+                        <tr><td>Low Pond Temp</td><td>$month.extraTemp1.min</td><td>$month.extraTemp1.mintime</td></tr>
+                        #end if
+                        #if $month.UV.has_data
+                        <tr><td>High UV</td><td>$month.UV.max</td><td>$month.UV.maxtime</td></tr>
+                        <tr><td>Low UV</td><td>$month.UV.min</td><td>$month.UV.mintime</td></tr>
+                        #end if
+                        #if $month.ET.has_data and $month.ET.sum.raw >0.0
+                        <tr><td>High ET</td><td>$month.ET.max</td><td>$month.ET.maxtime</td></tr>
+                        <tr><td>Low ET</td><td>$month.ET.min</td><td>$month.ET.mintime</td></tr>
+                        #end if
+                        #if $month.radiation.has_data
+                        <tr><td>High Radiation</td><td>$month.radiation.max</td><td>$month.radiation.maxtime</td></tr>
+                        <tr><td>Low Radiation</td><td>$month.radiation.min</td><td>$month.radiation.mintime</td></tr>
+                        #end if
+                    </table>
+                </div>
+
+                <div class="card" >
+                    <h1><i class="fa fa-calendar-o m-rot" ></i> This Year</h1>
+                    <table class="tablespacer">
+                        <tr><td>High Temperature</td><td>$year.outTemp.max</td><td>$year.outTemp.maxtime</td></tr>
+                        <tr><td>Low Temperature</td><td>$year.outTemp.min</td><td>$year.outTemp.mintime</td></tr>
+                        <tr><td>High Heat Index</td><td>$year.heatindex.max</td><td>$year.heatindex.maxtime</td></tr>
+                        <tr><td>Low Wind Chill</td><td>$year.windchill.min</td><td>$year.windchill.mintime</td></tr>
+                        <tr><td>High Dewpoint</td><td>$year.dewpoint.max</td><td>$year.dewpoint.maxtime</td></tr>
+                        <tr><td>Low Dewpoint</td><td>$year.dewpoint.min</td><td>$year.dewpoint.mintime</td></tr>
+                        <tr><td>High Humidity</td><td>$year.outHumidity.max</td><td>$year.outHumidity.maxtime</td></tr>
+                        <tr><td>Low Humidity</td><td>$year.outHumidity.min</td><td>$year.outHumidity.mintime</td></tr>
+                        <tr><td>High Barometer</td><td>$year.barometer.max</td><td>$year.barometer.maxtime</td></tr>
+                        <tr><td>Low Barometer</td><td>$year.barometer.min</td><td>$year.barometer.mintime</td></tr>
+                        <tr><td>Rain Total</td><td>$year.rain.sum</td><td></td></tr>
+                        <tr><td>High Rain Rate</td><td>$year.rainRate.max</td><td>$year.rainRate.maxtime</td></tr>
+                        <tr><td>High Wind Speed</td><td>$year.wind.max $year.wind.gustdir</td><td>$year.wind.maxtime</td></tr>
+                        <tr><td>Average Wind</td><td>$year.wind.avg</td><td></td></tr>
+                        <tr><td>RMS Wind</td><td>$year.wind.rms</td><td></td></tr>
+                        <tr><td>Vector Average Speed</td><td>$year.wind.vecavg</td><td></td></tr>
+                        <tr><td>Vector Average Direction</td><td>$year.wind.vecdir</td><td></td></tr>
+                        #if $day.inTemp.has_data
+                        <tr><td>High Inside Temperature</td><td>$year.inTemp.max</td><td>$year.inTemp.maxtime</td></tr>
+                        <tr><td>Low Inside Temperature</td><td>$year.inTemp.min</td><td>$year.inTemp.mintime</td></tr>
+                        #end if
+                        #if $year.extraTemp1.has_data
+                        <tr><td>High Pond Temp</td><td>$year.extraTemp1.max</td><td>$year.extraTemp1.maxtime</td></tr>
+                        <tr><td>Low Pond Temp</td><td>$year.extraTemp1.min</td><td>$year.extraTemp1.mintime</td></tr>
+                        #end if
+                        #if $year.UV.has_data
+                        <tr><td>High UV</td><td>$year.UV.max</td><td>$year.UV.maxtime</td></tr>
+                        <tr><td>Low UV</td><td>$year.UV.min</td><td>$year.UV.mintime</td></tr>
+                        #end if
+                        #if $year.ET.has_data and $year.ET.sum.raw >0.0
+                        <tr><td>High ET</td><td>$year.ET.max</td><td>$year.ET.maxtime</td></tr>
+                        <tr><td>Low ET</td><td>$year.ET.min</td><td>$year.ET.mintime</td></tr>
+                        #end if
+                        #if $year.radiation.has_data
+                        <tr><td>High Radiation</td><td>$year.radiation.max</td><td>$year.radiation.maxtime</td></tr>
+                        <tr><td>Low Radiation</td><td>$year.radiation.min</td><td>$year.radiation.mintime</td></tr>
+                        #end if
+                    </table>
+                </div>
+
+            </div>
+            
+            <div class="right" >
+
+                <div class="card cc graphs" >
+                    <h1><i class="fa fa-line-chart m-gruen" ></i> Monthly Statistics and Plots</h1>
+                    
+                    <img src="monthtempdew.png" alt="temperatures" />
+                    <img src="monthtempchill.png" alt="heatchill" />
+                    <img src="monthrain.png" alt="rain" />
+                    <img src="monthwind.png" alt="wind" />
+                    <img src="monthbarometer.png" alt="barometer"/>
+                    <img src="monthwinddir.png" alt="Hi Wind" />
+                    #if $day.inTemp.has_data
+                    <img src="monthinside.png" alt="Inside" />
+                    #end if
+                    <img src="monthwindvec.png" alt="Wind Vector" />
+                    #if $month.UV.has_data
+                    <img src="monthuv.png" alt="UV Index" />
+                    #end if
+                    #if $month.radiation.has_data
+                    <img src="monthradiation.png" alt="Radiation" />
+                    #end if
+                    #if $month.UV.has_data
+                    <img src="monthuv.png" alt="UV Index" />
+                    #end if
+                    #if $month.rxCheckPercent.has_data
+                    <img src="monthrx.png" alt="month rx percent"/>
+                    #end if
+                    #if $month.extraTemp1.has_data
+                    <img src="monthpond.png" alt="Pond Temperatures" />
+                    #end if
+                </div>
+                
+            </div>
+        </div>
+        </div>
+        
+        <footer>
+            <div class="container-fix" >
+            All rights reserved. &copy; 2016 
+            #if $Extras.has_key('copyright')
+            $Extras.copyright
+            #end if
+            &sdot; Design by <a href="http://blauesledersofa.de" >blaues Ledersofa</a>
+            &sdot; Powered by <a href="http://weewx.com/" target="_blank" >weewx</a>
+            </div>
+        </footer>
+    </body>
+</html>

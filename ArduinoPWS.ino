@@ -11,32 +11,32 @@
 
   Measurements are reported once a second but windspeed and rain gauge are tied to interrupts that are calcualted at each report.
 
-  This example code assumes the GP-635T GPS module is attached.
-
+  This example code assumes the GP-635T GPS module is attached
 */
 
 #include <Wire.h> //I2C needed for sensors
 #include "MPL3115A2.h" //Pressure sensor
 #include "HTU21D.h" //Humidity sensor
-#include <SoftwareSerial.h> //Needed for GPS
+#include <SoftwareSerial.h> //Needed for GPS and WiFi
 #include <TinyGPS++.h> //GPS parsing
 #include <math.h>
 
+// GPS
 TinyGPSPlus gps;
-
 static const int RXPin = 5, TXPin = 4; //GPS is attached to pin 4(TX from GPS) and pin 5(RX into GPS)
-SoftwareSerial ss(RXPin, TXPin);
+SoftwareSerial gpsSerial(RXPin, TXPin);
 
 MPL3115A2 myPressure; //Create an instance of the pressure sensor
 HTU21D myHumidity; //Create an instance of the humidity sensor
 
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //Hardware pin definitions
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // digital I/O pins
 const byte WSPEED = 3;
 const byte RAIN = 2;
-const byte STAT1 = 7;
-const byte STAT2 = 8;
+const byte STAT1 = 8; // Green status LED - weather data
+const byte STAT2 = 7; // Blue status LED - GPS fix
 const byte GPS_PWRCTL = 6; //Pulling this pin low puts GPS to sleep but maintains RTC and RAM
 
 // analog I/O pins
@@ -44,8 +44,8 @@ const byte REFERENCE_3V3 = A3;
 const byte LIGHT = A1;
 const byte BATT = A2;
 const byte WDIR = A0;
-//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //Global Variables
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 long lastSecond; //The millis counter to see when a second rolls by
@@ -55,43 +55,12 @@ byte minutes; //Keeps track of where we are in various arrays of data
 byte minutes_10m; //Keeps track of where we are in wind gust/dir over last 10 minutes array of data
 
 long lastWindCheck = 0;
-volatile long lastWindIRQ = 0;
-volatile byte windClicks = 0;
-
-//We need to keep track of the following variables:
-//Wind speed/dir each update (no storage)
-//Wind gust/dir over the day (no storage)
-//Wind speed/dir, avg over 2 minutes (store 1 per second)
-//Wind gust/dir over last 10 minutes (store 1 per minute)
-//Rain over the past hour (store 1 per minute)
-//Total rain over date (store one per day)
-
-byte windspdavg[120]; //120 bytes to keep track of 2 minute average
-int winddiravg[120]; //120 ints to keep track of 2 minute average
-float windgust_10m[10]; //10 floats to keep track of 10 minute max
-int windgustdirection_10m[10]; //10 ints to keep track of 10 minute max
-volatile float rainHour[60]; //60 floating numbers to keep track of 60 minutes of rain
-
-//These are all the weather values
-int winddir = 0; // [0-360 instantaneous wind direction]
-float windspeedmps = 0; // [m/s instantaneous wind speed]
-float windgustmps = 0; // [mps current wind gust, using software specific time period]
-int windgustdir = 0; // [0-360 using software specific time period]
-float windspdmps_avg2m = 0; // [mps 2 minute average wind speed m/s]
-int winddir_avg2m = 0; // [0-360 2 minute average wind direction]
-float windgustmps_10m = 0; // [m/s past 10 minutes wind gust m/s ]
-int windgustdir_10m = 0; // [0-360 past 10 minutes wind gust direction]
-float humidity = 0; // [%]
-float tempc = 0; // [temperature C]
-float rainmm = 0; // [rain mm over the past hour)] -- the accumulated rainfall in the past 60 min
-volatile float dailyrainmm = 0; // [rain mm so for today in local time]
-float pressure = 0;
-float dewptc; // [dewpoint C]
-
-float batt_lvl = 11.8; //[analog value from 0 to 1023]
-float light_lvl = 455; //[analog value from 0 to 1023]
 
 // volatiles are subject to modification by IRQs
+volatile long lastWindIRQ = 0;
+volatile byte windClicks = 0;
+volatile float rainHour[60]; //60 floating numbers to keep track of 60 minutes of rain
+volatile float dailyrainmm = 0; // [rain mm so for today in local time]
 volatile unsigned long raintime, rainlast, raininterval, rain;
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -124,16 +93,15 @@ void wspeedIRQ()
   }
 }
 
-
 void setup()
 {
   Serial.begin(9600);
-  Serial.println("Weather Station");
+  Serial.println("Arduino Personal Weather Station");
 
-  ss.begin(9600); //Begin listening to GPS over software serial at 9600. This should be the default baud of the module.
+  gpsSerial.begin(9600);
 
-  pinMode(STAT1, OUTPUT); //Status LED Blue
-  pinMode(STAT2, OUTPUT); //Status LED Green
+  pinMode(STAT1, OUTPUT); //Status LED Blue - Weather data refresh
+  pinMode(STAT2, OUTPUT); //Status LED Green - GPS fix
 
   pinMode(GPS_PWRCTL, OUTPUT);
   digitalWrite(GPS_PWRCTL, HIGH); //Pulling this pin low puts GPS to sleep but maintains RTC and RAM
@@ -162,8 +130,8 @@ void setup()
 
   // turn on interrupts
   interrupts();
-
-  Serial.println("Weather Shield online!");
+  
+  Serial.println("Ready");
 
 }
 
@@ -172,33 +140,13 @@ void loop()
   //Keep track of which minute it is
   if (millis() - lastSecond >= 1000)
   {
-    digitalWrite(STAT1, HIGH); //Blink stat LED
+    digitalWrite(STAT1, HIGH); //Blue stat LED
+    digitalWrite(STAT2, HIGH); //Green stat LED
 
     lastSecond += 1000;
 
     //Take a speed and direction reading every second for 2 minute average
     if (++seconds_2m > 119) seconds_2m = 0;
-
-    //Calc the wind speed and direction every second for 120 second to get 2 minute average
-    float currentSpeed = windspeedmps;
-    int currentDirection = winddir;
-    
-    windspdavg[seconds_2m] = (int)currentSpeed;
-    winddiravg[seconds_2m] = currentDirection;
-
-    //Check to see if this is a gust for the minute
-    if (currentSpeed > windgust_10m[minutes_10m])
-    {
-      windgust_10m[minutes_10m] = currentSpeed;
-      windgustdirection_10m[minutes_10m] = currentDirection;
-    }
-
-    //Check to see if this is a gust for the day
-    if (currentSpeed > windgustmps)
-    {
-      windgustmps = currentSpeed;
-      windgustdir = currentDirection;
-    }
 
     if (++seconds > 59)
     {
@@ -208,13 +156,18 @@ void loop()
       if (++minutes_10m > 9) minutes_10m = 0;
 
       rainHour[minutes] = 0; //Zero out this minute's rainfall amount
-      windgust_10m[minutes_10m] = 0; //Zero out this minute's gust
     }
 
     //Report all readings every second
-    printWeather();
+    if (seconds % 5 == 0)
+      getSensors();
 
-    digitalWrite(STAT1, LOW); //Turn off stat LED
+    digitalWrite(STAT1, LOW); //Turn off Blue stat LED
+    //Turn off Green stat LED if GPS is not fixed
+    if (gps.sentencesWithFix() <= 0)
+    {
+      digitalWrite(STAT2, LOW); // GPS fix lost
+    }
   }
 
   smartdelay(800); //Wait 1 second, and gather GPS data
@@ -226,55 +179,30 @@ static void smartdelay(unsigned long ms)
   unsigned long start = millis();
   do
   {
-    while (ss.available())
-      gps.encode(ss.read());
+    while (gpsSerial.available())
+      gps.encode(gpsSerial.read());
   } while (millis() - start < ms);
 }
 
 
 //Calculates each of the variables
-void calcWeather()
+void getSensors()
 {
+  int winddir = 0; // [0-360 instantaneous wind direction]
+  float windspeedmps = 0; // [m/s instantaneous wind speed]
+  float humidity = 0; // [%]
+  float tempc = 0; // [temperature C]
+  float rainmm = 0; // [rain mm over the past hour)] -- the accumulated rainfall in the past 60 min
+  float pressure = 0;
+  float dewptc; // [dewpoint C]
+  float batt_lvl = 11.8; //[analog value from 0 to 1023]
+  float light_lvl = 455; //[analog value from 0 to 1023]
+
   //Calc winddir
   winddir = get_wind_direction();
 
   //Calc windspeed
   windspeedmps = get_wind_speed();
-
-  //Calc windgustmps
-  //Calc windgustdir
-  //Report the largest windgust today
-  windgustmps = 0;
-  windgustdir = 0;
-
-  //Calc windspdmps_avg2m
-  float temp = 0;
-  for (int i = 0 ; i < 120 ; i++)
-    temp += windspdavg[i];
-  temp /= 120.0;
-  windspdmps_avg2m = temp;
-
-  //Calc winddir_avg2m
-  temp = 0; //Can't use winddir_avg2m because it's an int
-  for (int i = 0 ; i < 120 ; i++)
-    temp += winddiravg[i];
-  temp /= 120;
-  winddir_avg2m = temp;
-
-  //Calc windgustmps_10m
-  //Calc windgustdir_10m
-  //Find the largest windgust in the last 10 minutes
-  windgustmps_10m = 0;
-  windgustdir_10m = 0;
-  //Step through the 10 minutes
-  for (int i = 0; i < 10 ; i++)
-  {
-    if (windgust_10m[i] > windgustmps_10m)
-    {
-      windgustmps_10m = windgust_10m[i];
-      windgustdir_10m = windgustdirection_10m[i];
-    }
-  }
 
   //Calc humidity
   humidity = myHumidity.readHumidity();
@@ -301,6 +229,49 @@ void calcWeather()
   //Calc battery level
   batt_lvl = get_battery_level();
 
+  // Print to serial
+  Serial.print("$,winddir=");
+  Serial.print(winddir);
+  Serial.print(",windspeedmps=");
+  Serial.print(windspeedmps, 1);
+  Serial.print(",humidity=");
+  Serial.print(humidity, 1);
+  Serial.print(",tempc=");
+  Serial.print(tempc, 1);
+  Serial.print(",rainmm=");
+  Serial.print(rainmm, 2);
+  Serial.print(",dailyrainmm=");
+  Serial.print(dailyrainmm, 2);
+  Serial.print(",pressure=");
+  Serial.print(pressure, 2);
+  Serial.print(",dewptc=");
+  Serial.print(dewptc, 2);
+  Serial.print(",light_lvl=");
+  Serial.print(light_lvl, 2);
+  Serial.print(",latitude=");
+  Serial.print(gps.location.lat(), 6);
+  Serial.print(",longitude=");
+  Serial.print(gps.location.lng(), 6);
+  Serial.print(",altitude=");
+  Serial.print(gps.altitude.meters());
+  Serial.print(",sats=");
+  Serial.print(gps.satellites.value());
+
+  char sz[32];
+  Serial.print(",date=");
+  sprintf(sz, "%02d/%02d/%02d", gps.date.day(), gps.date.month(), gps.date.year());
+  Serial.print(sz);
+
+  Serial.print(",time=");
+  sprintf(sz, "%02d:%02d:%02d", gps.time.hour(), gps.time.minute(), gps.time.second());
+  Serial.print(sz);
+
+  Serial.print(",batt_lvl=");
+  Serial.print(batt_lvl, 2);
+
+  Serial.print(",");
+  Serial.println("#");
+  
 }
 
 //Returns the voltage of the light sensor based on the 3.3V rail
@@ -382,70 +353,6 @@ int get_wind_direction()
   if (adc < 967) return (315);
   if (adc < 990) return (270);
   return (-1); // error, disconnected?
-}
-
-
-//Prints the various variables directly to the port
-//I don't like the way this function is written but Arduino doesn't support floats under sprintf
-void printWeather()
-{
-  calcWeather(); //Go calc all the various sensors
-
-  Serial.println();
-  Serial.print("$,winddir=");
-  Serial.print(winddir);
-  Serial.print(",windspeedmps=");
-  Serial.print(windspeedmps, 1);
-  /*Serial.print(",windgustmps=");
-    Serial.print(windgustmps, 1);
-    Serial.print(",windgustdir=");
-    Serial.print(windgustdir);
-    Serial.print(",windspdmps_avg2m=");
-    Serial.print(windspdmps_avg2m, 1);
-    Serial.print(",winddir_avg2m=");
-    Serial.print(winddir_avg2m);
-    Serial.print(",windgustmps_10m=");
-    Serial.print(windgustmps_10m, 1);
-    Serial.print(",windgustdir_10m=");
-    Serial.print(windgustdir_10m);*/
-  Serial.print(",humidity=");
-  Serial.print(humidity, 1);
-  Serial.print(",tempc=");
-  Serial.print(tempc, 1);
-  Serial.print(",rainmm=");
-  Serial.print(rainmm, 2);
-  Serial.print(",dailyrainmm=");
-  Serial.print(dailyrainmm, 2);
-  Serial.print(",pressure=");
-  Serial.print(pressure, 2);
-  Serial.print(",dewptc=");
-  Serial.print(dewptc, 2);
-  Serial.print(",light_lvl=");
-  Serial.print(light_lvl, 2);
-  Serial.print(",latitude=");
-  Serial.print(gps.location.lat(), 6);
-  Serial.print(",longitude=");
-  Serial.print(gps.location.lng(), 6);
-  Serial.print(",altitude=");
-  Serial.print(gps.altitude.meters());
-  Serial.print(",sats=");
-  Serial.print(gps.satellites.value());
-
-  char sz[32];
-  Serial.print(",date=");
-  sprintf(sz, "%02d/%02d/%02d", gps.date.day(), gps.date.month(), gps.date.year());
-  Serial.print(sz);
-
-  Serial.print(",time=");
-  sprintf(sz, "%02d:%02d:%02d", gps.time.hour(), gps.time.minute(), gps.time.second());
-  Serial.print(sz);
-
-  Serial.print(",batt_lvl=");
-  Serial.print(batt_lvl, 2);
-
-  Serial.print(",");
-  Serial.println("#");
-
 }
 
 
