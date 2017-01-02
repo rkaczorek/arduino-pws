@@ -50,9 +50,9 @@ const byte WDIR = A0;
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 long lastSecond; //The millis counter to see when a second rolls by
 byte seconds; //When it hits 60, increase the current minute
-byte seconds_2m; //Keeps track of the "wind speed/dir avg" over last 2 minutes array of data
-byte minutes; //Keeps track of where we are in various arrays of data
-byte minutes_10m; //Keeps track of where we are in wind gust/dir over last 10 minutes array of data
+byte minutes; //When it hits 60, increase the current hour
+byte hours; //When it hits 24, increase the current day
+
 
 long lastWindCheck = 0;
 
@@ -60,8 +60,8 @@ long lastWindCheck = 0;
 volatile long lastWindIRQ = 0;
 volatile byte windClicks = 0;
 volatile float rainHour[60]; //60 floating numbers to keep track of 60 minutes of rain
-volatile float dailyrainmm = 0; // [rain mm so for today in local time]
-volatile unsigned long raintime, rainlast, raininterval, rain;
+volatile float rainDay[24]; //60 floating numbers to keep track of 60 minutes of rain
+volatile unsigned long raintime, rainlast, raininterval;
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -76,9 +76,9 @@ void rainIRQ()
 
   if (raininterval > 10) // ignore switch-bounce glitches less than 10mS after initial edge
   {
-    dailyrainmm += 0.011 * 25.4; //Each dump is 0.011" of water = 0.011" * 25.4 = 0.2794 mm
+    //Each dump is 0.011" of water = 0.011" * 25.4 = 0.2794 mm
     rainHour[minutes] += 0.011 * 25.4; //Increase this minute's amount of rain
-
+    rainDay[hours] += 0.011 * 25.4; //Increase this hour's amount of rain
     rainlast = raintime; // set up for next event
   }
 }
@@ -100,8 +100,8 @@ void setup()
 
   gpsSerial.begin(9600);
 
-  pinMode(STAT1, OUTPUT); //Status LED Blue - Weather data refresh
-  pinMode(STAT2, OUTPUT); //Status LED Green - GPS fix
+  pinMode(STAT1, OUTPUT); //Status LED Green - Weather data refresh
+  pinMode(STAT2, OUTPUT); //Status LED Blue - GPS fix
 
   pinMode(GPS_PWRCTL, OUTPUT);
   digitalWrite(GPS_PWRCTL, HIGH); //Pulling this pin low puts GPS to sleep but maintains RTC and RAM
@@ -140,34 +140,40 @@ void loop()
   //Keep track of which minute it is
   if (millis() - lastSecond >= 1000)
   {
-    digitalWrite(STAT1, HIGH); //Blue stat LED
-    digitalWrite(STAT2, HIGH); //Green stat LED
+    digitalWrite(STAT1, HIGH); //Green stat LED
+    //Turn off Blue stat LED if GPS is not fixed
+    if (gps.sentencesWithFix() <= 0)
+    {
+      digitalWrite(STAT2, HIGH); // No GPS fix
+    } else {
+      digitalWrite(STAT2, LOW); // GPS fix obtained
+    }
 
     lastSecond += 1000;
-
-    //Take a speed and direction reading every second for 2 minute average
-    if (++seconds_2m > 119) seconds_2m = 0;
 
     if (++seconds > 59)
     {
       seconds = 0;
-
-      if (++minutes > 59) minutes = 0;
-      if (++minutes_10m > 9) minutes_10m = 0;
-
-      rainHour[minutes] = 0; //Zero out this minute's rainfall amount
+      if (++minutes > 59)
+      {
+        minutes = 0;
+        if (++hours > 24)
+        {
+          hours = 0;
+          rainDay[hours] = 0; //Zero out this minute's rainfall amount
+        }
+        rainHour[minutes] = 0; //Zero out this minute's rainfall amount
+      }
     }
 
-    //Report all readings every second
+    //Get all sensors readings every 5 seconds
     if (seconds % 5 == 0)
       getSensors();
 
-    digitalWrite(STAT1, LOW); //Turn off Blue stat LED
-    //Turn off Green stat LED if GPS is not fixed
-    if (gps.sentencesWithFix() <= 0)
-    {
-      digitalWrite(STAT2, LOW); // GPS fix lost
-    }
+    // Blink every loop
+    digitalWrite(STAT1, LOW); //Turn off Green stat LED
+    digitalWrite(STAT2, LOW); //Turn off Blue stat LED
+
   }
 
   smartdelay(800); //Wait 1 second, and gather GPS data
@@ -192,8 +198,9 @@ void getSensors()
   float windspeedmps = 0; // [m/s instantaneous wind speed]
   float humidity = 0; // [%]
   float tempc = 0; // [temperature C]
-  float rainmm = 0; // [rain mm over the past hour)] -- the accumulated rainfall in the past 60 min
   float pressure = 0;
+  float rainmm = 0; // rain mm over the past hour -- the accumulated rainfall in the past 60 min
+  float dailyrainmm = 0; // rain mm so far today in local time
   float dewptc; // [dewpoint C]
   float batt_lvl = 11.8; //[analog value from 0 to 1023]
   float light_lvl = 455; //[analog value from 0 to 1023]
@@ -212,9 +219,13 @@ void getSensors()
 
   //Total rainfall for the day is calculated within the interrupt
   //Calculate amount of rainfall for the last 60 minutes
-  rainmm = 0;
   for (int i = 0 ; i < 60 ; i++)
     rainmm += rainHour[i];
+
+  //Total rainfall for the day is calculated within the interrupt
+  //Calculate amount of rainfall for the last 24 hours
+  for (int i = 0 ; i < 24 ; i++)
+    dailyrainmm += rainDay[i];
 
   //Calc pressure
   pressure = myPressure.readPressure();
@@ -279,13 +290,9 @@ void getSensors()
 float get_light_level()
 {
   float operatingVoltage = analogRead(REFERENCE_3V3);
-
   float lightSensor = analogRead(LIGHT);
-
   operatingVoltage = 3.3 / operatingVoltage; //The reference voltage is 3.3V
-
   lightSensor = operatingVoltage * lightSensor;
-
   return (lightSensor);
 }
 
@@ -296,15 +303,10 @@ float get_light_level()
 float get_battery_level()
 {
   float operatingVoltage = analogRead(REFERENCE_3V3);
-
   float rawVoltage = analogRead(BATT);
-
   operatingVoltage = 3.30 / operatingVoltage; //The reference voltage is 3.3V
-
   rawVoltage = operatingVoltage * rawVoltage; //Convert the 0 to 1023 int to actual voltage on BATT pin
-
   rawVoltage *= 4.90; //(3.9k+1k)/1k - multiple BATT voltage by the voltage divider to get actual system voltage
-
   return (rawVoltage);
 }
 
@@ -312,16 +314,11 @@ float get_battery_level()
 float get_wind_speed()
 {
   float deltaTime = millis() - lastWindCheck;
-
   deltaTime /= 1000.0; //Convert milliseconds to seconds
-
   float windSpeed = (float)windClicks / deltaTime;
-
   windClicks = 0; //Reset and start watching for new wind
   lastWindCheck = millis();
-
   windSpeed *= (1.492 * 1609.34 / 3600.0); //1.492 * 1609.34 / 3600 = 0.666982022 m/s
-
   return (windSpeed);
 }
 
@@ -329,13 +326,11 @@ float get_wind_speed()
 int get_wind_direction()
 {
   unsigned int adc;
-
   adc = analogRead(WDIR); // get the current reading from the sensor
-
+  
   // The following table is ADC readings for the wind direction sensor output, sorted from low to high.
   // Each threshold is the midpoint between adjacent headings. The output is degrees for that ADC reading.
   // Note that these are not in compass degree order! See Weather Meters datasheet for more information.
-
   if (adc < 380) return (113);
   if (adc < 393) return (68);
   if (adc < 414) return (90);
@@ -354,5 +349,4 @@ int get_wind_direction()
   if (adc < 990) return (270);
   return (-1); // error, disconnected?
 }
-
 
