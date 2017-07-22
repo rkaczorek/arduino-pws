@@ -7,11 +7,11 @@
   Much of this is based on Mike Grusin's USB Weather Board code: https://www.sparkfun.com/products/10586
 
   This code reads all the various sensors (wind speed, direction, rain gauge, humidty, pressure, light, batt_lvl, gps latitude, gps longitude, gps altitude, sat no, gps date, gps time)
-  and reports it over the serial comm port. This can be easily routed to an datalogger (such as OpenLog) or a wireless transmitter (such as Electric Imp).
+  and reports it over the serial com port.
 
-  Measurements are reported once a second but windspeed and rain gauge are tied to interrupts that are calcualted at each report.
+  Measurements are reported every 10 seconds but windspeed and rain gauge are tied to interrupts that are calcualted at each report.
 
-  This example code assumes the GP-635T GPS module is attached
+  This code assumes the GP-635T GPS module is attached
 */
 
 #include <Wire.h> //I2C needed for sensors
@@ -48,11 +48,10 @@ const byte WDIR = A0;
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //Global Variables
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-long lastSecond; //The millis counter to see when a second rolls by
-byte seconds; //When it hits 60, increase the current minute
-byte minutes; //When it hits 60, increase the current hour
-byte hours; //When it hits 24, increase the current day
-
+long lastSecond = 0; //The millis counter to see when a second rolls by
+byte seconds = 0; //When it hits 60, increase the current minute
+byte minutes = 0; //When it hits 60, increase the current hour
+byte hours = 0; //When it hits 24, increase the current day
 
 long lastWindCheck = 0;
 
@@ -60,7 +59,7 @@ long lastWindCheck = 0;
 volatile long lastWindIRQ = 0;
 volatile byte windClicks = 0;
 volatile float rainHour[60]; //60 floating numbers to keep track of 60 minutes of rain
-volatile float rainDay[24]; //60 floating numbers to keep track of 60 minutes of rain
+volatile float rainDay[24]; //24 floating numbers to keep track of 24 hours of rain
 volatile unsigned long raintime, rainlast, raininterval;
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -74,7 +73,7 @@ void rainIRQ()
   raintime = millis(); // grab current time
   raininterval = raintime - rainlast; // calculate interval between this and last event
 
-  if (raininterval > 10) // ignore switch-bounce glitches less than 10mS after initial edge
+  if (raininterval > 10) // ignore switch-bounce glitches less than 10ms after initial edge
   {
     //Each dump is 0.011" of water = 0.011" * 25.4 = 0.2794 mm
     rainHour[minutes] += 0.011 * 25.4; //Increase this minute's amount of rain
@@ -96,8 +95,6 @@ void wspeedIRQ()
 void setup()
 {
   Serial.begin(9600);
-  Serial.println("Arduino Personal Weather Station");
-
   gpsSerial.begin(9600);
 
   pinMode(STAT1, OUTPUT); //Status LED Green - Weather data refresh
@@ -106,8 +103,8 @@ void setup()
   pinMode(GPS_PWRCTL, OUTPUT);
   digitalWrite(GPS_PWRCTL, HIGH); //Pulling this pin low puts GPS to sleep but maintains RTC and RAM
 
-  pinMode(WSPEED, INPUT_PULLUP); // input from wind meters windspeed sensor
-  pinMode(RAIN, INPUT_PULLUP); // input from wind meters rain gauge sensor
+  pinMode(WSPEED, INPUT_PULLUP); // input from windspeed sensor
+  pinMode(RAIN, INPUT_PULLUP); // input from rain gauge sensor
 
   pinMode(REFERENCE_3V3, INPUT);
   pinMode(LIGHT, INPUT);
@@ -121,7 +118,6 @@ void setup()
   //Configure the humidity sensor
   myHumidity.begin();
 
-  seconds = 0;
   lastSecond = millis();
 
   // attach external interrupt pins to IRQ functions
@@ -131,8 +127,7 @@ void setup()
   // turn on interrupts
   interrupts();
   
-  Serial.println("Ready");
-
+  Serial.println("Arduino Personal Weather Station");
 }
 
 void loop()
@@ -141,12 +136,13 @@ void loop()
   if (millis() - lastSecond >= 1000)
   {
     digitalWrite(STAT1, HIGH); //Green stat LED
-    //Turn off Blue stat LED if GPS is not fixed
-    if (gps.sentencesWithFix() <= 0)
+
+    if (digitalRead(GPS_PWRCTL) && gps.satellites.value() < 4)
     {
-      digitalWrite(STAT2, HIGH); // No GPS fix
+      digitalWrite(STAT2, HIGH); //Turn on Blue stat LED if GPS is looking for fix
     } else {
-      digitalWrite(STAT2, LOW); // GPS fix obtained
+      digitalWrite(STAT2, LOW); //Turn off Blue stat LED if GPS is fixed
+      digitalWrite(GPS_PWRCTL, LOW); //Put GPS to sleep when fixed and wake up every hour
     }
 
     lastSecond += 1000;
@@ -156,31 +152,36 @@ void loop()
       seconds = 0;
       if (++minutes > 59)
       {
+        digitalWrite(GPS_PWRCTL, HIGH); //Wake up GPS from sleep every hour
         minutes = 0;
+        for (int i = 0 ; i < 60 ; i++)
+           rainHour[i] = 0;
         if (++hours > 24)
         {
           hours = 0;
-          rainDay[hours] = 0; //Zero out this minute's rainfall amount
+          for (int i = 0 ; i < 24 ; i++)
+             rainDay[i] = 0;
         }
-        rainHour[minutes] = 0; //Zero out this minute's rainfall amount
       }
     }
 
-    //Get all sensors readings every 5 seconds
-    if (seconds % 5 == 0)
+    //Get all sensors readings every 10 seconds
+    if (seconds % 10 == 0)
+    {
       getSensors();
+      if (digitalRead(GPS_PWRCTL))
+         getGPS(1000); //Wait 1 second, and gather GPS data
+    }
 
     // Blink every loop
     digitalWrite(STAT1, LOW); //Turn off Green stat LED
     digitalWrite(STAT2, LOW); //Turn off Blue stat LED
 
   }
-
-  smartdelay(800); //Wait 1 second, and gather GPS data
 }
 
 //While we delay for a given amount of time, gather GPS data
-static void smartdelay(unsigned long ms)
+static void getGPS(unsigned long ms)
 {
   unsigned long start = millis();
   do
@@ -306,7 +307,17 @@ float get_battery_level()
   float rawVoltage = analogRead(BATT);
   operatingVoltage = 3.30 / operatingVoltage; //The reference voltage is 3.3V
   rawVoltage = operatingVoltage * rawVoltage; //Convert the 0 to 1023 int to actual voltage on BATT pin
-  rawVoltage *= 4.90; //(3.9k+1k)/1k - multiple BATT voltage by the voltage divider to get actual system voltage
+  
+  //voltage divider on weather shield
+  // rawVoltage *= 4.90; //(3.9k+1k)/1k - multiple BATT voltage by the voltage divider to get actual system voltage
+
+  // voltage divider MOD
+  // 1) On Weather Shield: cut the track from original voltage divider to A2 pin (bootom layer)
+  // 2) Solar Charger Shield: connect voltage divider to A2 pin (top layer - R6 soldering field from R5 resistor)
+  
+  //voltage divider on solar charger shield
+  rawVoltage *= 1.74; // multiple BATT voltage by the voltage divider to get actual system voltage  
+  
   return (rawVoltage);
 }
 
