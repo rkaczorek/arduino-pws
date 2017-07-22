@@ -33,7 +33,7 @@ from weewx.units import INHG_PER_MBAR, MILE_PER_KM
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'ArduinoPWS'
-DRIVER_VERSION = '0.1'
+DRIVER_VERSION = '0.2'
 
 DEBUG_SERIAL = 1
 
@@ -174,19 +174,19 @@ class Station(object):
 
         Each line has 240 characters - 1 header byte, x data bytes, 1 trailer byte and a carriage return and line feed (new line)
 
-        winddir=338			-	wind direction (0-255)
+        winddir=338		-	wind direction (0-255)
         windspeedmps=0.0	-	wind speed (0.1 m/s)
         humidity=48.5		-	humidity (0.1 %)
-        tempc=20.3			-	outdoor temperature (0.1 C)
-        rainmm=0.00			-	rain (0.01 mm per hour)
+        tempc=20.3		-	outdoor temperature (0.1 C)
+        rainmm=0.00		-	rain (0.01 mm per hour)
         dailyrainmm=0.00	-	daily rain (0.01 mm per day)
         pressure=1024.33	-	pressure (0.1 hPa)
-        dewptc=9.05			-	dew point (0.01 C)
+        dewptc=9.05		-	dew point (0.01 C)
         light_lvl=0.00		-	light level (??)
         latitude=0.000000	-	GPS latitude (0.000001 deg)
         longitude=0.000000	-	GPS longitude (0.000001 deg)
         altitude=0.00		-	GPS altitude (0.01 m)
-        sats=0				-	GPS number of visible sats (0-n)
+        sats=0			-	GPS number of visible sats (0-n)
         date=28/12/2016		-	date (DD/MM/YYYY)
         time=20:27:26		-	time (HH:MM:SS)
         batt_lvl=4.25		-	baterry level (0.01 V)
@@ -196,8 +196,8 @@ class Station(object):
         data['windSpeed'] = Station._decode(raw, 2)  # m/s
         data['outHumidity'] = Station._decode(raw, 3)  # percent
         data['outTemp'] = Station._decode(raw, 4)  # degree_C
-        data['hourRain'] = Station._decode(raw, 5)  # mm/h
-        data['dayRain'] = Station._decode(raw, 6)  # mm/h
+        data['rainHour'] = Station._decode(raw, 5)  # mm/h
+        data['rainDay'] = Station._decode(raw, 6)  # mm
         data['pressure'] = Station._decode(raw, 7)  # mbar
         data['dewpoint'] = Station._decode(raw, 8)  # degree_C
         data['radiation'] = Station._decode(raw, 9)  # W/m2
@@ -208,12 +208,14 @@ class Station(object):
           data['gpsLatitude'] = Station._decode(raw, 10)  # degree
           data['gpsLongitude'] = Station._decode(raw, 11)  # degree
           data['gpsAltitude'] = Station._decode(raw, 12)  # meters
-          # let's make a date ;-)
-          DateTime = Station._decode(raw, 14) + ' ' + Station._decode(raw, 15)
-          DateTimeFormat = '%d/%m/%Y %H:%M:%S'
           try:
+            # let's make a date ;-)
+            DateTime = Station._decode(raw, 14) + ' ' + Station._decode(raw, 15)
+            DateTimeFormat = '%d/%m/%Y %H:%M:%S'
             td = int(time.mktime(time.strptime(DateTime, DateTimeFormat)))  # unix epoch
             data['gpsDateTime'] = td
+          except TypeError:
+            logdbg("Invalid GPS time data")
           except ValueError:
             logdbg("No GPS time data available")
 

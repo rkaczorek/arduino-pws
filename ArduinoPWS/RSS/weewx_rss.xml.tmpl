@@ -22,7 +22,7 @@
            Temperature: $current.outTemp; 
            Barometer: $current.barometer; 
            Wind: $current.windSpeed from $current.windDir; 
-           Rain rate: $current.rainRate;
+           Rain rate: $current.rainHour;
          </description>
          <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
 	     <geo:lat>$station.latitude_f</geo:lat>
@@ -37,7 +37,7 @@
              Humidity:            $current.outHumidity<br/>
              Barometer:           $current.barometer<br/>
              Wind:                $current.windSpeed from $current.windDir<br/>
-             Rain Rate:           $current.rainRate<br/>
+             Rain Rate:           $current.rainHour<br/>
         </p>
       ]]></content:encoded>
       </item>
@@ -51,7 +51,7 @@
 	        Min barometer:           $day.barometer.min at $day.barometer.mintime;
 	        Max barometer:           $day.barometer.max at $day.barometer.maxtime;
             Max wind :               $day.wind.max from $day.wind.gustdir at $day.wind.maxtime;
-            Rain today:              $day.rain.sum
+            Rain today:              $day.rainDay.sum
          </description>
          <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
 	     <geo:lat>$station.latitude_f</geo:lat>
@@ -64,7 +64,7 @@
 	         Min Barometer:           $day.barometer.min at $day.barometer.mintime<br/>
 	         Max Barometer:           $day.barometer.max at $day.barometer.maxtime<br/>
              Max Wind :               $day.wind.max from $day.wind.gustdir at $day.wind.maxtime<br/>
-             Rain today:              $day.rain.sum<br/>
+             Rain today:              $day.rainDay.sum<br/>
         </p>
       ]]></content:encoded>
       </item>
@@ -78,7 +78,7 @@
 	        Min barometer:           $month.barometer.min at $month.barometer.mintime;
 	        Max barometer:           $month.barometer.max at $month.barometer.maxtime;
             Max wind :               $month.wind.max from $month.wind.gustdir at $month.wind.maxtime;
-            Rain total for month:    $month.rain.sum
+            Rain total for month:    $month.rainDay.sum
          </description>
          <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
  		 <content:encoded><![CDATA[
@@ -89,7 +89,7 @@
 	         Min Barometer:           $month.barometer.min at $month.barometer.mintime<br/>
 	         Max Barometer:           $month.barometer.max at $month.barometer.maxtime<br/>
              Max Wind :               $month.wind.max from $month.wind.gustdir at $month.wind.maxtime<br/>
-             Rain total for month:    $month.rain.sum<br/>
+             Rain total for month:    $month.rainDay.sum<br/>
         </p>
       ]]></content:encoded>
       </item>
@@ -103,7 +103,7 @@
 	        Min barometer:           $year.barometer.min at $year.barometer.mintime;
 	        Max barometer:           $year.barometer.max at $year.barometer.maxtime;
             Max wind :               $year.wind.max from $year.wind.gustdir at $year.wind.maxtime;
-            Rain total for year:     $year.rain.sum
+            Rain total for year:     $year.rainDay.sum
          </description>
          <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
  		 <content:encoded><![CDATA[
@@ -114,7 +114,7 @@
 	         Min Barometer:           $year.barometer.min at $year.barometer.mintime<br/>
 	         Max Barometer:           $year.barometer.max at $year.barometer.maxtime<br/>
              Max Wind :               $year.wind.max from $year.wind.gustdir at $year.wind.maxtime<br/>
-             Rain total for year:     $year.rain.sum<br/>
+             Rain total for year:     $year.rainDay.sum<br/>
         </p>
       ]]></content:encoded>
       </item>

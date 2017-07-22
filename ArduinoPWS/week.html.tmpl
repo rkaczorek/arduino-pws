@@ -101,8 +101,8 @@
                         <tr><td>Low Humidity</td><td>$week.outHumidity.min</td><td>$week.outHumidity.mintime</td></tr>
                         <tr><td>High Barometer</td><td>$week.barometer.max</td><td>$week.barometer.maxtime</td></tr>
                         <tr><td>Low Barometer</td><td>$week.barometer.min</td><td>$week.barometer.mintime</td></tr>
-                        <tr><td>Rain Total</td><td>$week.rain.sum</td><td></td></tr>
-                        <tr><td>High Rain Rate</td><td>$week.rainRate.max</td><td>$week.rainRate.maxtime</td></tr>
+                        <tr><td>Rain Total</td><td>$week.rainDay.sum</td><td></td></tr>
+                        <tr><td>High Rain Rate</td><td>$week.rainHour.max</td><td>$week.rainHour.maxtime</td></tr>
                         <tr><td>High Wind Speed</td><td>$week.wind.max $week.wind.gustdir</td><td>$week.wind.maxtime</td></tr>
                         <tr><td>Average Wind</td><td>$week.wind.avg</td><td></td></tr>
                         <tr><td>RMS Wind</td><td>$week.wind.rms</td><td></td></tr>
@@ -121,8 +121,8 @@
                         <tr><td>Low UV</td><td>$week.UV.min</td><td>$week.UV.mintime</td></tr>
                         #end if
                         #if $week.ET.has_data and $week.ET.sum.raw >0.0
-                        <tr><td>High ET</td><td>$week.ET.max</td><td>$week.ET.maxtime</td></tr>
-                        <tr><td>Low ET</td><td>$week.ET.min</td><td>$week.ET.mintime</td></tr>
+                        <tr><td>High Evapotranspiration</td><td>$week.ET.max</td><td>$week.ET.maxtime</td></tr>
+                        <tr><td>Low Evapotranspiration</td><td>$week.ET.min</td><td>$week.ET.mintime</td></tr>
                         #end if
                         #if $week.radiation.has_data
                         <tr><td>High Radiation</td><td>$week.radiation.max</td><td>$week.radiation.maxtime</td></tr>
@@ -144,8 +144,8 @@
                         <tr><td>Low Humidity</td><td>$month.outHumidity.min</td><td>$month.outHumidity.mintime</td></tr>
                         <tr><td>High Barometer</td><td>$month.barometer.max</td><td>$month.barometer.maxtime</td></tr>
                         <tr><td>Low Barometer</td><td>$month.barometer.min</td><td>$month.barometer.mintime</td></tr>
-                        <tr><td>Rain Total</td><td>$month.rain.sum</td><td></td></tr>
-                        <tr><td>High Rain Rate</td><td>$month.rainRate.max</td><td>$month.rainRate.maxtime</td></tr>
+                        <tr><td>Rain Total</td><td>$month.rainDay.sum</td><td></td></tr>
+                        <tr><td>High Rain Rate</td><td>$month.rainHour.max</td><td>$month.rainHour.maxtime</td></tr>
                         <tr><td>High Wind Speed</td><td>$month.wind.max $month.wind.gustdir</td><td>$month.wind.maxtime</td></tr>
                         <tr><td>Average Wind</td><td>$month.wind.avg</td><td></td></tr>
                         <tr><td>RMS Wind</td><td>$month.wind.rms</td><td></td></tr>
@@ -164,8 +164,8 @@
                         <tr><td>Low UV</td><td>$month.UV.min</td><td>$month.UV.mintime</td></tr>
                         #end if
                         #if $month.ET.has_data and $month.ET.sum.raw >0.0
-                        <tr><td>High ET</td><td>$month.ET.max</td><td>$month.ET.maxtime</td></tr>
-                        <tr><td>Low ET</td><td>$month.ET.min</td><td>$month.ET.mintime</td></tr>
+                        <tr><td>High Evapotranspiration</td><td>$month.ET.max</td><td>$month.ET.maxtime</td></tr>
+                        <tr><td>Low Evapotranspiration</td><td>$month.ET.min</td><td>$month.ET.mintime</td></tr>
                         #end if
                         #if $month.radiation.has_data
                         <tr><td>High Radiation</td><td>$month.radiation.max</td><td>$month.radiation.maxtime</td></tr>
@@ -199,6 +199,9 @@
                     #end if
                     #if $week.UV.has_data
                     <img src="weekuv.png" alt="UV Index" />
+                    #end if
+                    #if $week.supplyVoltage.has_data
+                    <img src="weekbattery.png" alt="Battery Level" />
                     #end if
                     #if $week.rxCheckPercent.has_data
                     <img src="weekrx.png" alt="week rx percent"/>

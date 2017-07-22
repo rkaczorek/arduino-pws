@@ -119,8 +119,8 @@
                         <tr><td>Low UV</td><td>$year.UV.min</td><td>$year.UV.mintime</td></tr>
                         #end if
                         #if $year.ET.has_data and $year.ET.sum.raw >0.0
-                        <tr><td>High ET</td><td>$year.ET.max</td><td>$year.ET.maxtime</td></tr>
-                        <tr><td>Low ET</td><td>$year.ET.min</td><td>$year.ET.mintime</td></tr>
+                        <tr><td>High Evapotranspiration</td><td>$year.ET.max</td><td>$year.ET.maxtime</td></tr>
+                        <tr><td>Low Evapotranspiration</td><td>$year.ET.min</td><td>$year.ET.mintime</td></tr>
                         #end if
                         #if $year.radiation.has_data
                         <tr><td>High Radiation</td><td>$year.radiation.max</td><td>$year.radiation.maxtime</td></tr>
@@ -132,8 +132,8 @@
                 <div class="card" >
                     <h1><i class="fa fa-cloud m-blau" ></i> Rain This Year (from 1-$station.rain_year_str)</h1>
                     <table class="tablespacer">
-                        <tr><td>Total Rain</td><td>$rainyear.rain.sum</td><td></td></tr>
-                        <tr><td>High Rain Rate</td><td>$rainyear.rainRate.max</td><td>$rainyear.rainRate.maxtime</td></tr>
+                        <tr><td>Total Rain</td><td>$rainyear.rainDay.sum</td><td></td></tr>
+                        <tr><td>High Rain Rate</td><td>$rainyear.rainHour.max</td><td>$rainyear.rainHour.maxtime</td></tr>
                     </table>
                 </div>
 
@@ -163,6 +163,9 @@
                     #end if
                     #if $year.UV.has_data
                     <img src="yearuv.png" alt="UV Index" />
+                    #end if
+                    #if $year.supplyVoltage.has_data
+                    <img src="yearbattery.png" alt="Battery Level" />
                     #end if
                     #if $year.rxCheckPercent.has_data
                     <img src="yearrx.png" alt="year rx percent"/>
