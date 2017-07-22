@@ -9,9 +9,9 @@ Additionally it can provide some basic information about rise, transit and set o
 
 # How to start?
 Running ArduinoPWS is quite simple but requires some linux skills.
-1. First put your parts together and ttach your weather shield to the main controller.
+1. First put your parts together and attach your weather shield to the main controller.
 
-2. When your're done with it upload ArduinoPWS.ino sketch to your Arduino Uno / SparkFun RedBoard.
+2. When your're done upload ArduinoPWS.ino sketch to your Arduino Uno / SparkFun RedBoard.
 To test weather hardware works as expected, check serial monitor and make sure that your sensors return valid data.
 You should see something like this on your serial console.
 ```
