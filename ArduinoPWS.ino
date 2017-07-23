@@ -152,17 +152,15 @@ void loop()
       seconds = 0;
       if (++minutes > 59)
       {
-        digitalWrite(GPS_PWRCTL, HIGH); //Wake up GPS from sleep every hour
         minutes = 0;
-        for (int i = 0 ; i < 60 ; i++)
-           rainHour[i] = 0;
+        digitalWrite(GPS_PWRCTL, HIGH); //Wake up GPS from sleep every hour
         if (++hours > 24)
         {
           hours = 0;
-          for (int i = 0 ; i < 24 ; i++)
-             rainDay[i] = 0;
         }
+        rainDay[hours] = 0;
       }
+      rainHour[minutes] = 0;
     }
 
     //Get all sensors readings every 10 seconds
