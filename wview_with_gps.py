@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2016 Radek Kaczorek <rkaczorek@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -30,8 +30,8 @@ schema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
           ('windDir',              'REAL'),
           ('windGust',             'REAL'),
           ('windGustDir',          'REAL'),
-          ('rainRate',             'REAL'),
-          ('rain',                 'REAL'),
+          ('rainHour',             'REAL'),
+          ('rainDay',              'REAL'),
           ('dewpoint',             'REAL'),
           ('windchill',            'REAL'),
           ('heatindex',            'REAL'),

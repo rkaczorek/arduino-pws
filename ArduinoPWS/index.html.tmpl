@@ -99,7 +99,7 @@
                         <tr><td>Barometer</td><td>$current.barometer</td></tr>
                         <tr><td>Barometer Trend ($trend.time_delta.hour.format("%.0f"))</td><td>$trend.barometer</td></tr>
                         <tr><td>Wind</td><td>$current.windSpeed $current.windDir.ordinal_compass ($current.windDir)</td></tr>
-                        <tr><td>Rain Rate</td><td>$current.rainRate</td></tr>
+                        <tr><td>Rain Rate</td><td>$current.rainHour</td></tr>
                         #if $day.inTemp.has_data
                         <tr><td>Inside Temperature</td><td>$current.inTemp</td></tr>
                         #end if
@@ -110,7 +110,7 @@
                         <tr><td>UV</td><td>$current.UV</td></tr>
                         #end if
                         #if $day.ET.has_data and $day.ET.sum.raw > 0.0
-                        <tr><td>ET</td><td>$current.ET</td></tr>
+                        <tr><td>Evapotranspiration</td><td>$current.ET</td></tr>
                         #end if
                         #if $day.radiation.has_data
                         <tr><td>Solar Radiation</td><td>$current.radiation</td></tr>
@@ -122,7 +122,7 @@
                         <tr><td>GPS Satellites</td><td>$current.gpsSats.format("%.0f")</td></tr>
                         #end if
                         #if $day.gpsDateTime.has_data and $current.gpsDateTime.has_data
-                        <tr><td>GPS Time</td><td>$current.gpsDateTime</td></tr>
+                        <tr><td>GPS Fix (UTC)</td><td>$current.gpsDateTime</td></tr>
                         #end if
                         #if $day.gpsLatitude.has_data and $current.gpsLatitude.has_data
                         <tr><td>GPS Latitude</td><td>$current.gpsLatitude</td></tr>
@@ -149,8 +149,8 @@
                         <tr><td>Low Humidity</td><td>$day.outHumidity.min</td><td>$day.outHumidity.mintime</td></tr>
                         <tr><td>High Barometer</td><td>$day.barometer.max</td><td>$day.barometer.maxtime</td></tr>
                         <tr><td>Low Barometer</td><td>$day.barometer.min</td><td>$day.barometer.mintime</td></tr>
-                        <tr><td>Today's Rain</td><td>$day.rain.sum</td><td></td></tr>
-                        <tr><td>High Rain Rate</td><td>$day.rainRate.max</td><td>$day.rainRate.maxtime</td></tr>
+                        <tr><td>Today's Rain</td><td>$day.rainDay.sum</td><td></td></tr>
+                        <tr><td>High Rain Rate</td><td>$day.rainHour.max</td><td>$day.rainHour.maxtime</td></tr>
                         <tr><td>High Wind</td><td>$day.wind.max $day.wind.gustdir</td><td>$day.wind.maxtime</td></tr>
                         <tr><td>Average Wind</td><td>$day.wind.avg</td><td></td></tr>
                         <tr><td>RMS Wind</td><td>$day.wind.rms</td><td></td></tr>
@@ -169,8 +169,8 @@
                         <tr><td>Low UV</td><td>$day.UV.min</td><td>$day.UV.mintime</td></tr>
                         #end if
                         #if $day.ET.has_data and $day.ET.sum.raw >0.0
-                        <tr><td>High ET</td><td>$day.ET.max</td><td>$day.ET.maxtime</td></tr>
-                        <tr><td>Low ET</td><td>$day.ET.min</td><td>$day.ET.mintime</td></tr>
+                        <tr><td>High Evapotranspiration</td><td>$day.ET.max</td><td>$day.ET.maxtime</td></tr>
+                        <tr><td>Low Evapotranspiration</td><td>$day.ET.min</td><td>$day.ET.mintime</td></tr>
                         #end if
                         #if $day.radiation.has_data
                         <tr><td>High Radiation</td><td>$day.radiation.max</td><td>$day.radiation.maxtime</td></tr>
@@ -403,6 +403,9 @@
                     #if $day.UV.has_data
                     <img src="dayuv.png" alt="UV Index" />
                     #end if
+                    #if $day.supplyVoltage.has_data
+                    <img src="daybattery.png" alt="Battery Level" />
+                    #end if
                     #if $day.rxCheckPercent.has_data
                     <img src="dayrx.png" alt="day rx percent"/>
                     #end if
@@ -410,7 +413,6 @@
                     <img src="daypond.png" alt="Pond Temperatures" />
                     #end if
                 </div>
-                
             </div>
         </div>
         </div>

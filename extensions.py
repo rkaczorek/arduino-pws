@@ -1,5 +1,5 @@
 #
-# Copyright 2016 Radek Kaczorek <rkaczorek AT gmail DOT com>
+#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -18,9 +18,10 @@ import locale
 locale.setlocale(locale.LC_ALL, '')
 
 import weewx.units
+weewx.units.obs_group_dict['rainHour'] = 'group_rainrate'
+weewx.units.obs_group_dict['rainDay'] = 'group_rain'
 #weewx.units.obs_group_dict['gpsLatitude'] =
 #weewx.units.obs_group_dict['gpsLongitude'] =
 #weewx.units.obs_group_dict['gpsSats'] =
 weewx.units.obs_group_dict['gpsAltitude'] = 'group_altitude'
 weewx.units.obs_group_dict['gpsDateTime'] = 'group_time'
-
