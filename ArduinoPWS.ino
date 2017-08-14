@@ -75,9 +75,9 @@ void rainIRQ()
 
   if (raininterval > 10) // ignore switch-bounce glitches less than 10ms after initial edge
   {
-    //Each dump is 0.011" of water = 0.011" * 25.4 = 0.2794 mm
-    rainHour[minutes] += 0.011 * 25.4; //Increase this minute's amount of rain
-    rainDay[hours] += 0.011 * 25.4; //Increase this hour's amount of rain
+    //Each dump is 0.011" / 0.2794 mm of water
+    rainHour[minutes] += 0.2794; //Increase this minute's amount of rain
+    rainDay[hours] += 0.2794; //Increase this hour's amount of rain
     rainlast = raintime; // set up for next event
   }
 }
@@ -137,12 +137,17 @@ void loop()
   {
     digitalWrite(STAT1, HIGH); //Green stat LED
 
-    if (digitalRead(GPS_PWRCTL) && gps.satellites.value() < 4)
+    if (gps.location.age() > 3600000) //Wake up GPS from sleep every hour
     {
-      digitalWrite(STAT2, HIGH); //Turn on Blue stat LED if GPS is looking for fix
-    } else {
+      digitalWrite(GPS_PWRCTL, HIGH);
+    }
+
+    if (gps.location.isUpdated())
+    {
       digitalWrite(STAT2, LOW); //Turn off Blue stat LED if GPS is fixed
       digitalWrite(GPS_PWRCTL, LOW); //Put GPS to sleep when fixed and wake up every hour
+    } else {
+      digitalWrite(STAT2, HIGH); //Turn on Blue stat LED if GPS is looking for fix
     }
 
     lastSecond += 1000;
@@ -153,7 +158,6 @@ void loop()
       if (++minutes > 59)
       {
         minutes = 0;
-        digitalWrite(GPS_PWRCTL, HIGH); //Wake up GPS from sleep every hour
         if (++hours > 24)
         {
           hours = 0;
@@ -216,12 +220,12 @@ void getSensors()
   //Calc temp from pressure sensor
   tempc = myPressure.readTemp();
 
-  //Total rainfall for the day is calculated within the interrupt
+  //Rainfall for each minute is calculated within the interrupt
   //Calculate amount of rainfall for the last 60 minutes
   for (int i = 0 ; i < 60 ; i++)
     rainmm += rainHour[i];
 
-  //Total rainfall for the day is calculated within the interrupt
+  //Rainfall for each hour is calculated within the interrupt
   //Calculate amount of rainfall for the last 24 hours
   for (int i = 0 ; i < 24 ; i++)
     dailyrainmm += rainDay[i];
@@ -240,48 +244,47 @@ void getSensors()
   batt_lvl = get_battery_level();
 
   // Print to serial
-  Serial.print("$,winddir=");
+  Serial.print("$,WD=");
   Serial.print(winddir);
-  Serial.print(",windspeedmps=");
+  Serial.print(",WS=");
   Serial.print(windspeedmps, 1);
-  Serial.print(",humidity=");
+  Serial.print(",H=");
   Serial.print(humidity, 1);
-  Serial.print(",tempc=");
+  Serial.print(",T=");
   Serial.print(tempc, 1);
-  Serial.print(",rainmm=");
+  Serial.print(",RH=");
   Serial.print(rainmm, 2);
-  Serial.print(",dailyrainmm=");
+  Serial.print(",RD=");
   Serial.print(dailyrainmm, 2);
-  Serial.print(",pressure=");
+  Serial.print(",AP=");
   Serial.print(pressure, 2);
-  Serial.print(",dewptc=");
+  Serial.print(",DP=");
   Serial.print(dewptc, 2);
-  Serial.print(",light_lvl=");
+  Serial.print(",R=");
   Serial.print(light_lvl, 2);
-  Serial.print(",latitude=");
+  Serial.print(",LAT=");
   Serial.print(gps.location.lat(), 6);
-  Serial.print(",longitude=");
+  Serial.print(",LNG=");
   Serial.print(gps.location.lng(), 6);
-  Serial.print(",altitude=");
+  Serial.print(",ALT=");
   Serial.print(gps.altitude.meters());
-  Serial.print(",sats=");
+  Serial.print(",SAT=");
   Serial.print(gps.satellites.value());
 
   char sz[32];
-  Serial.print(",date=");
+  Serial.print(",GD=");
   sprintf(sz, "%02d/%02d/%02d", gps.date.day(), gps.date.month(), gps.date.year());
   Serial.print(sz);
 
-  Serial.print(",time=");
+  Serial.print(",GT=");
   sprintf(sz, "%02d:%02d:%02d", gps.time.hour(), gps.time.minute(), gps.time.second());
   Serial.print(sz);
 
-  Serial.print(",batt_lvl=");
+  Serial.print(",BV=");
   Serial.print(batt_lvl, 2);
 
   Serial.print(",");
   Serial.println("#");
-  
 }
 
 //Returns the voltage of the light sensor based on the 3.3V rail
