@@ -64,7 +64,7 @@ $month.dateTime.format($YM)
         $year.outTemp.meanmax.nolabel($Temp,$NONE) $year.outTemp.meanmin.nolabel($Temp,$NONE) $year.outTemp.avg.nolabel($Temp,$NONE) $year.heatdeg.sum.nolabel($Temp,$NONE) $year.cooldeg.sum.nolabel($Temp,$NONE)  $year.outTemp.max.nolabel($Temp,$NONE) $year.outTemp.maxtime.format($M,$NODAY)  $year.outTemp.min.nolabel($Temp,$NONE) $year.outTemp.mintime.format($M,$NODAY) $year.outTemp.max_ge($Hot).nolabel($Count,$NONE) $year.outTemp.max_le($Cold).nolabel($Count,$NONE) $year.outTemp.min_le($Cold).nolabel($Count,$NONE) $year.outTemp.min_le($VeryCold).nolabel($Count,$NONE)
 
 
-                  PRECIPITATION ($unit.label.rainDay.strip())
+                  PRECIPITATION ($unit.label.rainHour.strip())
 
                   MAX         ---DAYS OF RAIN---
                   OBS.               OVER
@@ -72,13 +72,13 @@ $month.dateTime.format($YM)
 ------------------------------------------------
 #for $month in $year.months
 #if $month.barometer.count.raw
-$month.dateTime.format($YM) $month.rainDay.sum.nolabel($Rain,$NONE) $month.rainDay.maxsum.nolabel($Rain,$NONE)  $month.rainDay.maxsumtime.format($D,$NODAY) $month.rainDay.sum_ge($Trace).nolabel($Count,$NONE) $month.rainDay.sum_ge($SomeRain).nolabel($Count,$NONE) $month.rainDay.sum_ge($Soak).nolabel($Count,$NONE)
+$month.dateTime.format($YM) $month.rainHour.sum.nolabel($Rain,$NONE) $month.rainHour.maxsum.nolabel($Rain,$NONE)  $month.rainHour.maxsumtime.format($D,$NODAY) $month.rainHour.sum_ge($Trace).nolabel($Count,$NONE) $month.rainHour.sum_ge($SomeRain).nolabel($Count,$NONE) $month.rainHour.sum_ge($Soak).nolabel($Count,$NONE)
 #else
 $month.dateTime.format($YM)
 #end if
 #end for
 ------------------------------------------------
-        $year.rainDay.sum.nolabel($Rain,$NONE) $year.rainDay.maxsum.nolabel($Rain,$NONE)  $year.rainDay.maxsumtime.format($M,$NODAY) $year.rainDay.sum_ge($Trace).nolabel($Count,$NONE) $year.rainDay.sum_ge($SomeRain).nolabel($Count,$NONE) $year.rainDay.sum_ge($Soak).nolabel($Count,$NONE)
+        $year.rainHour.sum.nolabel($Rain,$NONE) $year.rainHour.maxsum.nolabel($Rain,$NONE)  $year.rainHour.maxsumtime.format($M,$NODAY) $year.rainHour.sum_ge($Trace).nolabel($Count,$NONE) $year.rainHour.sum_ge($SomeRain).nolabel($Count,$NONE) $year.rainHour.sum_ge($Soak).nolabel($Count,$NONE)
 
 
            WIND SPEED ($unit.label.windSpeed.strip())

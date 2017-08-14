@@ -20,9 +20,9 @@
         
         <!-- Styles -->
         <link href='http://fonts.googleapis.com/css?family=Lato:300,400,700' rel='stylesheet' type='text/css'>
-		<link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+        <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
         <link rel="stylesheet" href="css/main.css">
-        
+
         <!-- Scripts -->
         <script src="js/modernizr-2.6.2.min.js"></script>
         
@@ -149,7 +149,7 @@
                         <tr><td>Low Humidity</td><td>$day.outHumidity.min</td><td>$day.outHumidity.mintime</td></tr>
                         <tr><td>High Barometer</td><td>$day.barometer.max</td><td>$day.barometer.maxtime</td></tr>
                         <tr><td>Low Barometer</td><td>$day.barometer.min</td><td>$day.barometer.mintime</td></tr>
-                        <tr><td>Today's Rain</td><td>$day.rainDay.sum</td><td></td></tr>
+                        <tr><td>Today's Rain</td><td>$day.rainHour.sum</td><td></td></tr>
                         <tr><td>High Rain Rate</td><td>$day.rainHour.max</td><td>$day.rainHour.maxtime</td></tr>
                         <tr><td>High Wind</td><td>$day.wind.max $day.wind.gustdir</td><td>$day.wind.maxtime</td></tr>
                         <tr><td>Average Wind</td><td>$day.wind.avg</td><td></td></tr>
@@ -193,7 +193,7 @@
                     <h3>
                         #if $Extras.has_key('radar_gif')
                         
-                        <a id="btn1" class="cpointer" >Infrared Map</a>
+                        <a id="btn1" class="cpointer" >Animated Map</a>
                         <script>    
                             function changeRadar() {
                                 if(document.getElementById("radar").src == "$Extras.radar_img") {
@@ -249,11 +249,13 @@
                     <div class="haelfte" >
                         <h3>Sun</h3>
                         <table>
+                            <tr><td>Start astronomical twilight:</td><td>$almanac(horizon=-18).sun(use_center=1).rise</td></tr>
                             <tr><td>Start civil twilight:</td><td>$almanac(horizon=-6).sun(use_center=1).rise</td></tr>
                             <tr><td>Sunrise</td><td>$almanac.sun.rise.string($sun_None)</td></tr>
                             <tr><td>Transit:</td><td>$almanac.sun.transit</td></tr>
                             <tr><td>Sunset:</td><td>$almanac.sun.set.string($sun_None)</td></tr>
                             <tr><td>End civil twilight:</td><td>$almanac(horizon=-6).sun(use_center=1).set</td></tr>
+                            <tr><td>End astronomical twilight:</td><td>$almanac(horizon=-18).sun(use_center=1).set</td></tr>
                             <tr><td>Azimuth:</td><td>$("%.1f&deg;" % $almanac.sun.az)</td></tr>
                             <tr><td>Altitude:</td><td>$("%.1f&deg;" % $sun_altitude)</td></tr>
                             <tr><td>Right ascension:</td><td>$("%.1f&deg;" % $almanac.sun.ra)</td></tr>
@@ -269,16 +271,18 @@
                             #end if
                         </table>
                     </div>
-                    <div class="haelfte" >
+                    <div class="haelfte">
                         <h3>Moon</h3>
                         <table>
-                            <tr><td>Rise:</td><td>$almanac.moon.rise</td></tr>
-                            <tr><td>Transit:</td><td>$almanac.moon.transit</td></tr>
-                            <tr><td>Set:</td><td>$almanac.moon.set</td></tr>
-                            <tr><td>Azimuth:</td><td>$("%.1f&deg;" % $almanac.moon.az)</td></tr>
-                            <tr><td>Altitude:</td><td>$("%.1f&deg;" % $almanac.moon.alt)</td></tr>
-                            <tr><td>Right ascension:</td><td>$("%.1f&deg;" % $almanac.moon.ra)</td></tr>
-                            <tr><td>Declination:</td><td>$("%.1f&deg;" % $almanac.moon.dec)</td></tr>
+                             <tr>
+                                 #set $moonsize = 50
+                                 #set $moonshadow = int($moonsize * (100 - $almanac.moon_fullness) / 100) * -1
+                                 <td style="vertical-align:top;">Phase:</td>
+                                 <td>
+                                     <div style="display:inline-block;margin:-5px 0 0 -68px;width:$($moonsize)px;height:$($moonsize)px;background:white;background-image:url('moon.png');background-repeat:no-repeat;background-size:$($moonsize)px $($moonsize)px;background-position:center;border-radius:50%;box-shadow:inset $($moonshadow)px 0 3px 0 rgba(0,0,0,0.75);"></div>
+                                     <div style="display:inline-block;vertical-align:top;margin-left:15px;">$almanac.moon_phase<br />($almanac.moon_fullness% full)</div>
+                                </td>
+                            </tr>
                             #if $almanac.next_full_moon.raw < $almanac.next_new_moon.raw
                             <tr><td>Full moon:</td><td>$almanac.next_full_moon</td></tr>
                             <tr><td>New moon:</td><td>$almanac.next_new_moon</td></tr>
@@ -286,7 +290,13 @@
                             <tr><td>New moon:</td><td>$almanac.next_new_moon</td></tr>
                             <tr><td>Full moon:</td><td>$almanac.next_full_moon</td></tr>
                             #end if
-                            <tr><td>Phase:</td><td>$almanac.moon_phase<br />($almanac.moon_fullness% full)</td></tr>
+                            <tr><td>Rise:</td><td>$almanac.moon.rise</td></tr>
+                            <tr><td>Transit:</td><td>$almanac.moon.transit</td></tr>
+                            <tr><td>Set:</td><td>$almanac.moon.set</td></tr>
+                            <tr><td>Azimuth:</td><td>$("%.1f&deg;" % $almanac.moon.az)</td></tr>
+                            <tr><td>Altitude:</td><td>$("%.1f&deg;" % $almanac.moon.alt)</td></tr>
+                            <tr><td>Right ascension:</td><td>$("%.1f&deg;" % $almanac.moon.ra)</td></tr>
+                            <tr><td>Declination:</td><td>$("%.1f&deg;" % $almanac.moon.dec)</td></tr>
                         </table>
                     </div>
                     #if $Extras.has_key('astro_panel')
@@ -326,9 +336,9 @@
 						#set $ut = float($utstr.split(":")[0]) + float($utstr.split(":")[1])/60 + float($utstr.split(":")[2])/3600
 						<!--
 						LST = 100.46 + 0.985647 * d + long + 15 * UT [based on http://www.stargazing.net/kepler/altaz.html]
-						d    is the days from J2000 (1200 hrs UT on Jan 1st 2000 AD), including the fraction of a day
-						UT is the universal time in decimal hours
-						long is your longitude in decimal degrees, East positive									
+						d - the days from J2000 (1200 hrs UT on Jan 1st 2000 AD), including the fraction of a day
+						UT - the universal time in decimal hours
+						long - your longitude in decimal degrees, East positive									
 						-->
 						#set $lst = 100.46 + 0.985647 * $d + $lon + 15 * $ut
 						<!-- reduce lst -->
@@ -339,7 +349,7 @@
                                                 #set $lstM = int($lstMtmp)
                                                 #set $lstS = int(($lstMtmp - $lstM)*60)
 						<!-- Polaris Hour Angle = LST - RA Polaris [expressed in degrees or 15*(h+m/60+s/3600)] -->
-						#set $polaris_hour_angle = $lst - $almanac.polaris.ra
+						#set $polaris_hour_angle = $lst - $almanac.polaris.a_ra
 						#if $polaris_hour_angle < 0
 						#set $polaris_hour_angle += 360
 						#end if
@@ -355,14 +365,21 @@
 						<!-- convert to integer and reverse revolution for charting -->
                                                 #set $polaris_hour_angle = int($polaris_hour_angle)
 						#set $polaris_hour_angle = 360 + $polaris_hour_angle * -1
-						
-						
+						<!-- set view as in polar finder scope -->
+						#set $polaris_hour_angle -= 180
+						<!-- set chart size -->
+						#set chartsize = 200
+
 						<h3>Polaris Hour Angle</h3>
 						<table style="font-size:0.75em;">
-							<tr><td style="vertical-align:top">Current hour angle: <b>$("%02d" % $phaH):$("%02d" % $phaM):$("%02d" % $phaS)</b></td>
-							    <td rowspan="8" style="width:200px;height:200px;background-image:url('reticle.png');background-repeat:no-repeat;background-size:200px 200px;background-position:center;text-align:center;vertical-align:middle;">
-								    <div style="display:block;position:relative;overflow:hidden;width:200px;height:200px;text-align:center;vertical-align:middle;"><img src="polaris.png" alt="polaris" style="max-width:100%;-ms-transform: rotate($($polaris_hour_angle)deg);-webkit-transform: rotate($($polaris_hour_angle)deg);transform: rotate($($polaris_hour_angle)deg);" /></div>
-								</td>
+							<tr>
+							    <td style="vertical-align:top">Current hour angle: <b>$("%02d" % $phaH):$("%02d" % $phaM):$("%02d" % $phaS)</b></td>
+							    <td rowspan="8" style="vertical-align:top">
+								    <div style="display:block;position:relative;overflow:hidden;width:$($chartsize)px;height:$($chartsize)px;background-image:url('reticle.png');background-repeat:no-repeat;background-size:$($chartsize)px $($chartsize)px;background-position:center;margin-top:-50px;">
+									<img src="polaris.png" alt="polaris" style="max-width:100%;-ms-transform: rotate($($polaris_hour_angle)deg);-webkit-transform: rotate($($polaris_hour_angle)deg);transform: rotate($($polaris_hour_angle)deg);" />
+								    </div>
+								    <p style="margin:-8px 0 0 35px;font-size:0.8em;">View as in polar finder scope</p>
+							    </td>
 							</tr>
 							<tr><td style="vertical-align:top">Next transit on: <b>$almanac.polaris.next_transit</b></td></tr>
 							<tr><td>Local sidereal time: <b>$("%02d" % $lstH):$("%02d" % $lstM):$("%02d" % $lstS)</b></td></tr>
@@ -389,6 +406,7 @@
                     
                     <img src="daytempdew.png" alt="temperatures" />
                     <img src="daytempchill.png" alt="heatchill" />
+                    <img src="dayhumidity.png" alt="humidity" />
                     <img src="dayrain.png" alt="rain" />
                     <img src="daywind.png" alt="wind" />
                     <img src="daybarometer.png" alt="barometer"/>

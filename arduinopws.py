@@ -144,11 +144,12 @@ class Station(object):
         return buf
 
     def validate_string(self, buf):
-        if len(buf) > 245:
+        if len(buf) > 245 or len(buf.split(",")) < 17:
             raise weewx.WeeWxIOError("Unexpected buffer length %d" % len(buf))
-        if buf.split(",")[0] != '$':
+        elif buf.split(",")[0] != '$':
             raise weewx.WeeWxIOError("Unexpected header bytes '%s'" % buf.split(",")[0])
-        return buf
+        else:
+            return buf
 
     def get_readings_with_retry(self, max_tries=5, retry_wait=10):
         for ntries in range(0, max_tries):

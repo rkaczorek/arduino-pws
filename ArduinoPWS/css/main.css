@@ -617,7 +617,8 @@ header {
     width: 100%;
     font-size: 1.4em;
     font-weight: 400;
-    margin: 2em 0 0 0; }
+    margin: 2em 0 0 0;
+    color: #d5f2f5; }
     header nav ul {
       list-style-type: none;
       margin: 0;
@@ -630,8 +631,8 @@ header {
       display: block; }
     header nav select {
       display: block;
-      font-size: 0.8em;
-      font-weight: 300;
+      font-size: 0.9em;
+      font-weight: 400;
       border: none;
       outline: none;
       -webkit-appearance: none;
@@ -639,7 +640,10 @@ header {
       appearance: none;
       cursor: pointer;
       background: #05c2d8;
-      color: #fff; }
+      color: #d5f2f5; }
+    header nav select:hover {
+      color: #f4feff;
+      transition: all 0.2s; }
     header nav a {
       color: #d5f2f5;
       transition: all 0.2s; }
@@ -989,3 +993,4 @@ table.tablespacer tr:not(:last-child) {
     page-break-after: avoid; } }
 
 /*# sourceMappingURL=main.css.map */
+
