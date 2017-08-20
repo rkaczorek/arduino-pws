@@ -99,7 +99,7 @@
                         <tr><td>Barometer</td><td>$current.barometer</td></tr>
                         <tr><td>Barometer Trend ($trend.time_delta.hour.format("%.0f"))</td><td>$trend.barometer</td></tr>
                         <tr><td>Wind</td><td>$current.windSpeed $current.windDir.ordinal_compass ($current.windDir)</td></tr>
-                        <tr><td>Rain Rate</td><td>$current.rainHour</td></tr>
+                        <tr><td>Rain Rate</td><td>$current.rainRate</td></tr>
                         #if $day.inTemp.has_data
                         <tr><td>Inside Temperature</td><td>$current.inTemp</td></tr>
                         #end if
@@ -149,8 +149,8 @@
                         <tr><td>Low Humidity</td><td>$day.outHumidity.min</td><td>$day.outHumidity.mintime</td></tr>
                         <tr><td>High Barometer</td><td>$day.barometer.max</td><td>$day.barometer.maxtime</td></tr>
                         <tr><td>Low Barometer</td><td>$day.barometer.min</td><td>$day.barometer.mintime</td></tr>
-                        <tr><td>Today's Rain</td><td>$day.rainHour.sum</td><td></td></tr>
-                        <tr><td>High Rain Rate</td><td>$day.rainHour.max</td><td>$day.rainHour.maxtime</td></tr>
+                        <tr><td>Today's Rain</td><td>$day.rain.sum</td><td></td></tr>
+                        <tr><td>High Rain Rate</td><td>$day.rain.max</td><td>$day.rain.maxtime</td></tr>
                         <tr><td>High Wind</td><td>$day.wind.max $day.wind.gustdir</td><td>$day.wind.maxtime</td></tr>
                         <tr><td>Average Wind</td><td>$day.wind.avg</td><td></td></tr>
                         <tr><td>RMS Wind</td><td>$day.wind.rms</td><td></td></tr>
@@ -275,12 +275,25 @@
                         <h3>Moon</h3>
                         <table>
                              <tr>
-                                 #set $moonsize = 50
-                                 #set $moonshadow = int($moonsize * (100 - $almanac.moon_fullness) / 100) * -1
+                                 #set $moonsize = 60
+                                 #set $phasesize = 1.1
+                                 #set $moonshadow = int($moonsize * $almanac.moon_fullness / 100)
+                                 #if $almanac.moon_phase == "Waxing crescent" or $almanac.moon_phase == "First quarter" or $almanac.moon_phase == "Waxing gibbous"
+                                 #set $moonshadow *= -1
+                                 #end if
+                                 #if $almanac.moon_phase == "Waxing gibbous" or $almanac.moon_phase == "Waning gibbous"
+                                 #set $phasesize = 1.5 
+                                 #end if
+                                 #if $almanac.moon_phase == "First quarter" or $almanac.moon_phase == "Last quarter"
+                                 #set $phasesize = 2  
+                                 #end if
+
                                  <td style="vertical-align:top;">Phase:</td>
                                  <td>
-                                     <div style="display:inline-block;margin:-5px 0 0 -68px;width:$($moonsize)px;height:$($moonsize)px;background:white;background-image:url('moon.png');background-repeat:no-repeat;background-size:$($moonsize)px $($moonsize)px;background-position:center;border-radius:50%;box-shadow:inset $($moonshadow)px 0 3px 0 rgba(0,0,0,0.75);"></div>
-                                     <div style="display:inline-block;vertical-align:top;margin-left:15px;">$almanac.moon_phase<br />($almanac.moon_fullness% full)</div>
+                                     <div style="display:inline-block;vertical-align:top;width:150px;height:60px;">$almanac.moon_phase<br />($almanac.moon_fullness% full)</div>
+                                     <div style="display:inline-block;margin:-15px 0 -10px 0;width:$($moonsize)px;height:$($moonsize)px;background:white;background-image:url('moon.png');background-repeat:no-repeat;background-size:$($moonsize)px $($moonsize)px;background-position:center;border-radius:50%;overflow:hidden;box-shadow: 0 0 5px #000;">
+                                        <div style="width:$($moonsize*$phasesize)px;height:$($moonsize*$phasesize)px;border-radius:50%;background:rgba(0,0,0,0.65);position:relative;left:$($moonshadow)px;top:$(($moonsize - $moonsize * $phasesize)/2)px"></div>
+                                     </div>
                                 </td>
                             </tr>
                             #if $almanac.next_full_moon.raw < $almanac.next_new_moon.raw
@@ -373,7 +386,7 @@
 						<h3>Polaris Hour Angle</h3>
 						<table style="font-size:0.75em;">
 							<tr>
-							    <td style="vertical-align:top">Current hour angle: <b>$("%02d" % $phaH):$("%02d" % $phaM):$("%02d" % $phaS)</b></td>
+							    <td style="vertical-align:top;width:180px;">Current hour angle: <b>$("%02d" % $phaH):$("%02d" % $phaM):$("%02d" % $phaS)</b></td>
 							    <td rowspan="8" style="vertical-align:top">
 								    <div style="display:block;position:relative;overflow:hidden;width:$($chartsize)px;height:$($chartsize)px;background-image:url('reticle.png');background-repeat:no-repeat;background-size:$($chartsize)px $($chartsize)px;background-position:center;margin-top:-50px;">
 									<img src="polaris.png" alt="polaris" style="max-width:100%;-ms-transform: rotate($($polaris_hour_angle)deg);-webkit-transform: rotate($($polaris_hour_angle)deg);transform: rotate($($polaris_hour_angle)deg);" />

@@ -20,7 +20,7 @@
 - Arduino sketch hosted on github (https://github.com/rkaczorek/arduino-pws)
 
 The driver communicates to Sparkfun Weather Shield over bluetooth serial port
-Port parameters are 9600, 8N1, with no flow control.
+Port parameters are 115200, 8N1, with no flow control.
 """
 
 from __future__ import with_statement
@@ -96,8 +96,8 @@ class ArduinoPWS(weewx.drivers.AbstractDevice):
 class Station(object):
     def __init__(self, port):
         self.port = port
-        self.baudrate = 9600
-        self.timeout = 10 # seconds
+        self.baudrate = 115200
+        self.timeout = 30
         self.serial_port = None
 
     def __enter__(self):
@@ -144,7 +144,7 @@ class Station(object):
         return buf
 
     def validate_string(self, buf):
-        if len(buf) > 245 or len(buf.split(",")) < 17:
+        if len(buf.split(",")) != 17:
             raise weewx.WeeWxIOError("Unexpected buffer length %d" % len(buf))
         elif buf.split(",")[0] != '$':
             raise weewx.WeeWxIOError("Unexpected header bytes '%s'" % buf.split(",")[0])
@@ -169,58 +169,52 @@ class Station(object):
     @staticmethod
     def parse_readings(raw):
         """Arduino Personal Weather Station emit data in the following format:
+        $,WindDir=338,WindSpeed=0.0,Humidity=46.5,Temp=29.7,Rain=0.00,Pressure=1003.94,DewPoint=17.04,Light=1.43,Latitude=0.000000,Longitude=0.000000,Altitude=0.00,Satellites=0,FixDate=00/00/2000,FixTime=00:00:00,Battery=3.94,#
 
-        $,winddir=-1,windspeedmps=0.0,humidity=48.5,tempc=20.3,rainmm=0.00,dailyrainmm=0.00,pressure=1024.33,dewptc=9.05,light_lvl=0.00,
-        latitude=0.000000,longitude=0.000000,altitude=0.00,sats=0,date=28/12/2016,time=20:27:26,batt_lvl=4.25,#
-
-        Each line has 240 characters - 1 header byte, x data bytes, 1 trailer byte and a carriage return and line feed (new line)
-
-        winddir=338		-	wind direction (0-255)
-        windspeedmps=0.0	-	wind speed (0.1 m/s)
-        humidity=48.5		-	humidity (0.1 %)
-        tempc=20.3		-	outdoor temperature (0.1 C)
-        rainmm=0.00		-	rain (0.01 mm per hour)
-        dailyrainmm=0.00	-	daily rain (0.01 mm per day)
-        pressure=1024.33	-	pressure (0.1 hPa)
-        dewptc=9.05		-	dew point (0.01 C)
-        light_lvl=0.00		-	light level (??)
-        latitude=0.000000	-	GPS latitude (0.000001 deg)
-        longitude=0.000000	-	GPS longitude (0.000001 deg)
-        altitude=0.00		-	GPS altitude (0.01 m)
-        sats=0			-	GPS number of visible sats (0-n)
-        date=28/12/2016		-	date (DD/MM/YYYY)
-        time=20:27:26		-	time (HH:MM:SS)
-        batt_lvl=4.25		-	baterry level (0.01 V)
+        WindDir=338		-	wind direction (0-255)
+        WindSpeed=0.0		-	wind speed (0.1 m/s)
+        Humidity=48.5		-	humidity (0.1 %)
+        Temp=20.3		-	outdoor temperature (0.1 C)
+        Rain=0.28		-	rain (0.01 mm per hour)
+        Pressure=1024.33	-	pressure (0.1 hPa)
+        DewPoint=9.05		-	dew point (0.01 C)
+        Light=0.00		-	light level (??)
+        Latitude=0.000000	-	GPS latitude (0.000001 deg)
+        Longitude=0.000000	-	GPS longitude (0.000001 deg)
+        Altitude=0.00		-	GPS altitude (0.01 m)
+        Satellites=0		-	GPS number of visible sats (0-n)
+        FixDate=28/12/2016	-	date (DD/MM/YYYY)
+        FixTime=20:27:26	-	time (HH:MM:SS)
+        Battery=4.25		-	baterry level (0.01 V)
         """
         data = dict()
-        data['windDir'] = Station._decode(raw, 1)  # compass deg
-        data['windSpeed'] = Station._decode(raw, 2)  # m/s
-        data['outHumidity'] = Station._decode(raw, 3)  # percent
-        data['outTemp'] = Station._decode(raw, 4)  # degree_C
-        data['rainHour'] = Station._decode(raw, 5)  # mm/h
-        data['rainDay'] = Station._decode(raw, 6)  # mm
-        data['pressure'] = Station._decode(raw, 7)  # mbar
-        data['dewpoint'] = Station._decode(raw, 8)  # degree_C
-        data['radiation'] = Station._decode(raw, 9)  # W/m2
-        data['gpsSats'] = Station._decode(raw, 13)  # none
+        data['windDir'] = Station._decode(raw, 1)
+        data['windSpeed'] = Station._decode(raw, 2)
+        data['outHumidity'] = Station._decode(raw, 3)
+        data['outTemp'] = Station._decode(raw, 4)
+        data['rain'] = Station._decode(raw, 5)
+        data['pressure'] = Station._decode(raw, 6)
+        data['dewpoint'] = Station._decode(raw, 7)
+        data['radiation'] = Station._decode(raw, 8)
+        data['gpsSats'] = Station._decode(raw, 12)
 
         # don't collect GPS data if no satellites available
         if data['gpsSats'] > 0:
-          data['gpsLatitude'] = Station._decode(raw, 10)  # degree
-          data['gpsLongitude'] = Station._decode(raw, 11)  # degree
-          data['gpsAltitude'] = Station._decode(raw, 12)  # meters
+          data['gpsLatitude'] = Station._decode(raw, 9)
+          data['gpsLongitude'] = Station._decode(raw, 10)
+          data['gpsAltitude'] = Station._decode(raw, 11)
           try:
             # let's make a date ;-)
-            DateTime = Station._decode(raw, 14) + ' ' + Station._decode(raw, 15)
+            DateTime = Station._decode(raw, 13) + ' ' + Station._decode(raw, 14)
             DateTimeFormat = '%d/%m/%Y %H:%M:%S'
-            td = int(time.mktime(time.strptime(DateTime, DateTimeFormat)))  # unix epoch
+            td = int(time.mktime(time.strptime(DateTime, DateTimeFormat)))
             data['gpsDateTime'] = td
           except TypeError:
             logdbg("Invalid GPS time data")
           except ValueError:
             logdbg("No GPS time data available")
 
-        data['supplyVoltage'] = Station._decode(raw, 16)  # volt
+        data['supplyVoltage'] = Station._decode(raw, 15)
 
         return data
 
@@ -231,7 +225,7 @@ class Station(object):
             sensors = s.split(",")
             if index <= len(sensors) - 1 and len(sensors[index].split("=")) == 2:
                sensor = sensors[index].split("=")[1] # return only value at given index
-               if index == 14 or index == 15:
+               if index == 13 or index == 14:
                  v = sensor
                else:
                  v = float(sensor)

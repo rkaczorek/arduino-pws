@@ -5,7 +5,7 @@ ArduinoPWS is a full featured personal weather station build on:
 - Weewx weather server
 
 ArduinPWS provides valuable information about weather conditions such as temperature, humidity, dewpoint, pressure, wind speed, wind direction, rain rate, solar radiation, GPS position and time.
-Additionally it can provide some basic information about rise, transit and set of the Sun, Moon and all solar planets. A real astronomy geek will appreciate information about current Polaris Hour Angle.
+Additionally it can provide some basic information about rise, transit and set of the Sun, Moon and all solar planets. A real astronomy geek will appreciate information about current Moon Phase and Polaris Hour Angle.
 
 # How to start?
 Running ArduinoPWS is quite simple but requires some linux skills.
@@ -15,7 +15,7 @@ Running ArduinoPWS is quite simple but requires some linux skills.
 To test weather hardware works as expected, check serial monitor and make sure that your sensors return valid data.
 You should see something like this on your serial console.
 ```
-$,winddir=-1,windspeedmps=0.0,humidity=48.5,tempc=20.3,rainmm=0.00,dailyrainmm=0.00,pressure=1024.33,dewptc=9.05,light_lvl=0.00,latitude=0.000000,longitude=0.000000,altitude=0.00,sats=0,date=28/12/2016,time=20:27:26,batt_lvl=4.25,#
+$,WindDir=338,WindSpeed=0.0,Humidity=46.5,Temp=29.7,Rain=0.00,Pressure=1003.94,DewPoint=17.04,Light=1.43,Latitude=0.000000,Longitude=0.000000,Altitude=0.00,Satellites=0,FixDate=00/00/2000,FixTime=00:00:00,Battery=3.94,#
 ```
 
 3. Then connect your Arduino to your weather server running weewx.
@@ -35,7 +35,7 @@ If everything is ok you should see the results same to running serial monitor (s
 
 7. Copy extensions.py to your weewx extensions directory (e.g. /usr/share/weewx/user/)
 
-8. Copy wview_with_gps.py to your weewx schemas directory (e.g. /usr/share/weewx/schemas/)
+8. Copy wview_arduinopws.py to your weewx schemas directory (e.g. /usr/share/weewx/schemas/)
 
 9. Copy and customize weewx configuration file weewx.conf to its destination (e.g. /etc/weewx/)
 

@@ -18,8 +18,6 @@ import locale
 locale.setlocale(locale.LC_ALL, '')
 
 import weewx.units
-weewx.units.obs_group_dict['rainHour'] = 'group_rainrate'
-weewx.units.obs_group_dict['rainDay'] = 'group_rain'
 #weewx.units.obs_group_dict['gpsLatitude'] =
 #weewx.units.obs_group_dict['gpsLongitude'] =
 #weewx.units.obs_group_dict['gpsSats'] =
