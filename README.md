@@ -18,14 +18,14 @@ You should see something like this on your serial console.
 $,WindDir=338,WindSpeed=0.0,Humidity=46.5,Temp=29.7,Rain=0.00,Pressure=1003.94,DewPoint=17.04,Light=1.43,Latitude=0.000000,Longitude=0.000000,Altitude=0.00,Satellites=0,FixDate=00/00/2000,FixTime=00:00:00,Battery=3.94,#
 ```
 
-3. Then connect your Arduino to your weather server running weewx.
+3. Then connect your Arduino to your weather server running weewx. Note that arduinopws.py driver is configured to use serial baud rate 115200, the same as preset in ArduinoPWS.ino arduino firmware.
 You can use USB cable, Bluetooth adapter attached to the hardware serial on your Arduino or anything that forwards serial data to your weather server.
 Choose whatever suits you. However if you use anything else than USB cable, make sure to disconnect it before reprogramming your Arduino in the future.
 Otherwise you will not be able to upload a sketch to your Arduino.
 
 4. Verify weather serial connection between your weather server and Arduino is operational. You can to this by running:
 ```
-miniterm.py /dev/your_serial_device
+miniterm.py /dev/your_serial_device 115200
 ```
 If everything is ok you should see the results same to running serial monitor (see point 2 above)
 
